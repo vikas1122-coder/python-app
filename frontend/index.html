@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarDeals Pro - Premium Car Dealership</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.c
+    om/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2><i class="fas fa-car"></i> CarDealer Pro</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#cars" class="nav-link">Cars</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#search" class="nav-link">Search</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        
+        <div class="hero-content">
+            <h1>Find Your Dream Car</h1>
+            <p>Discover premium vehicles with unbeatable prices and exceptional service</p>
+            <div class="hero-buttons">
+                <a href="#cars" class="btn btn-primary">Browse Cars</a>
+                <a href="#search" class="btn btn-secondary">Search Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Cars Section -->
+    <section id="featured" class="featured-cars">
+        <div class="container">
+            <h2 class="section-title">Featured Vehicles</h2>
+            <div class="cars-grid" id="featuredCars">
+                <!-- Cars will be loaded here by JavaScript -->
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading featured cars...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Cars Section -->
+    <section id="cars" class="all-cars">
+        <div class="container">
+            <h2 class="section-title">Our Vehicle Collection</h2>
+            <div class="cars-grid" id="allCars">
+                <!-- Cars will be loaded here by JavaScript -->
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading cars...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section id="search" class="search-section">
+        <div class="container">
+            <h2 class="section-title">Find Your Perfect Car</h2>
+            <div class="search-form">
+                <div class="search-row">
+                    <div class="search-field">
+                        <label for="make">Make</label>
+                        <select id="make" name="make">
+                            <option value="">Select Make</option>
+                        </select>
+                    </div>
+                    <div class="search-field">
+                        <label for="model">Model</label>
+                        <select id="model" name="model">
+                            <option value="">Select Model</option>
+                        </select>
+                    </div>
+                    <div class="search-field">
+                        <label for="fuelType">Fuel Type</label>
+                        <select id="fuelType" name="fuelType">
+                            <option value="">All Fuel Types</option>
+                            <option value="Gasoline">Gasoline</option>
+                            <option value="Hybrid">Hybrid</option>
+                            <option value="Electric">Electric</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-row">
+                    <div class="search-field">
+                        <label for="minPrice">Min Price</label>
+                        <input type="number" id="minPrice" name="minPrice" placeholder="Min Price">
+                    </div>
+                    <div class="search-field">
+                        <label for="maxPrice">Max Price</label>
+                        <input type="number" id="maxPrice" name="maxPrice" placeholder="Max Price">
+                    </div>
+                    <div class="search-field">
+                        <label for="year">Year</label>
+                        <input type="number" id="year" name="year" placeholder="Year" min="2015" max="2024">
+                    </div>
+                </div>
+                <button type="button" id="searchBtn" class="btn btn-primary">Search Cars</button>
+            </div>
+            <div class="search-results" id="searchResults">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About CarDealer Pro</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>With over 20 years of experience in the automotive industry, CarDealer Pro has been your trusted partner in finding the perfect vehicle. We offer a wide selection of premium cars, competitive pricing, and exceptional customer service.</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Certified Quality</h3>
+                            <p>All our vehicles undergo rigorous inspection and certification.</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-handshake"></i>
+                            <h3>Trusted Service</h3>
+                            <p>Our experienced team provides personalized service and support.</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-dollar-sign"></i>
+                            <h3>Best Prices</h3>
+                            <p>We offer competitive pricing with flexible financing options.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Address</h3>
+                            <p>123 Car Street<br>Auto City, AC 12345</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Phone</h3>
+                            <p>+1 (408) 690-8391</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email</h3>
+                            <p>info@cardealerpro.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" name="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-car"></i> CarDealer Pro</h3>
+                    <p>Your trusted partner for premium vehicles and exceptional service.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#cars">Cars</a></li>
+                        <li><a href="#search">Search</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Info</h3>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                    <p><i class="fas fa-envelope"></i> info@cardealerpro.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 CarDealer Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Car Detail Modal -->
+    <div id="carModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="carDetailContent">
+                <!-- Car details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
