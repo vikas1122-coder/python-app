@@ -1,26 +1,40 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import List, Optional
+from pymongo import ReturnDocument
 import uvicorn
+from dotenv import load_dotenv
+load_dotenv()  # picks up .env in the project root
 
-# Initialize FastAPI app
+
+
+from database import db, init_db
+
+# ---------------- App ----------------
 app = FastAPI(title="CarDealer Pro API", description="Premium Car Dealership Backend API")
 
-# Mount static files directory
+@app.on_event("startup")
+async def _startup():
+    await init_db()
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+# Static assets (images, css, js under /static)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Add CORS middleware to allow frontend to communicate with backend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Pydantic models
+# Serve frontend asset folders
+app.mount("/css", StaticFiles(directory="frontend/css"), name="css")
+app.mount("/js", StaticFiles(directory="frontend/js"), name="js")
+app.mount("/images", StaticFiles(directory="frontend/images"), name="frontend-images")
+
+
+# ---------------- Models ----------------
 class Car(BaseModel):
     id: int
     make: str
@@ -46,159 +60,131 @@ class CarSearch(BaseModel):
     fuel_type: Optional[str] = None
     transmission: Optional[str] = None
 
-# Sample car data
-cars_data = [
-    Car(
-        id=1,
-        make="Toyota",
-        model="Camry",
-        year=2022,
-        price=28500,
-        mileage=15000,
-        color="Silver",
-        fuel_type="Hybrid",
-        transmission="CVT",
-        engine="2.5L 4-Cylinder",
-        features=["Leather Seats", "Sunroof", "Navigation", "Backup Camera", "Bluetooth"],
-        image_url="/static/images/2024-Toyota-Camry-rendering-front.jpg",
-        description="Excellent condition Toyota Camry with low mileage and premium features."
-    ),
-    Car(
-        id=2,
-        make="Honda",
-        model="Accord",
-        year=2023,
-        price=32000,
-        mileage=8000,
-        color="White",
-        fuel_type="Gasoline",
-        transmission="Automatic",
-        engine="1.5L Turbo 4-Cylinder",
-        features=["Heated Seats", "Apple CarPlay", "Android Auto", "Lane Assist", "Blind Spot Monitor"],
-        image_url="/static/images/2018_Honda_Accord_Touring.jpg",
-        description="Nearly new Honda Accord with advanced safety features and modern technology."
-    ),
-    Car(
-        id=3,
-        make="BMW",
-        model="3 Series",
-        year=2021,
-        price=45000,
-        mileage=25000,
-        color="Black",
-        fuel_type="Gasoline",
-        transmission="Automatic",
-        engine="2.0L Turbo 4-Cylinder",
-        features=["Premium Sound", "Leather Interior", "Sport Package", "Heated Seats", "Navigation"],
-        image_url="/static/images/BMW-rendering-front.jpg",
-        description="Luxury BMW 3 Series with sport package and premium amenities."
-    ),
-    Car(
-        id=4,
-        make="Mercedes-Benz",
-        model="C-Class",
-        year=2022,
-        price=52000,
-        mileage=18000,
-        color="Blue",
-        fuel_type="Gasoline",
-        transmission="Automatic",
-        engine="2.0L Turbo 4-Cylinder",
-        features=["MBUX Infotainment", "Panoramic Sunroof", "Premium Leather", "Burmester Audio", "AMG Package"],
-        image_url="/static/images/Mercedes-Benz-2024.jpg",
-        description="Sophisticated Mercedes-Benz C-Class with AMG styling and advanced technology."
-    ),
-    Car(
-        id=5,
-        make="Audi",
-        model="A4",
-        year=2023,
-        price=48000,
-        mileage=12000,
-        color="Gray",
-        fuel_type="Gasoline",
-        transmission="Automatic",
-        engine="2.0L Turbo 4-Cylinder",
-        features=["Virtual Cockpit", "Bang & Olufsen Audio", "Quattro AWD", "Adaptive Cruise", "Parking Assist"],
-        image_url="/static/images/Audi-2024.jpg",
-        description="Premium Audi A4 with Quattro all-wheel drive and cutting-edge technology."
-    ),
-    Car(
-        id=6,
-        make="Tesla",
-        model="Model 3",
-        year=2023,
-        price=55000,
-        mileage=5000,
-        color="Red",
-        fuel_type="Electric",
-        transmission="Automatic",
-        engine="Electric Motor",
-        features=["Autopilot", "Supercharging", "Premium Interior", "Over-the-Air Updates", "Full Self-Driving Capable"],
-        image_url="/static/images/Tesla-2024.jpg",
-        description="Revolutionary Tesla Model 3 with advanced autopilot and electric performance."
-    )
-]
+def doc_to_car(doc) -> dict:
+    """Convert Mongo doc to Car shape (drop _id)."""
+    if not doc:
+        return None
+    d = dict(doc)
+    d.pop("_id", None)
+    return d
 
-# API Routes
+# ---------------- CORS ----------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# ---------------- API Routes ----------------
+
+# List all cars
 @app.get("/api/cars", response_model=List[Car])
 async def get_cars():
-    return cars_data
+    cursor = db.cars.find({})
+    return [doc_to_car(d) async for d in cursor]
 
+# Get one car by numeric id
 @app.get("/api/cars/{car_id}", response_model=Car)
 async def get_car(car_id: int):
-    car = next((car for car in cars_data if car.id == car_id), None)
-    if not car:
+    doc = await db.cars.find_one({"id": car_id})
+    if not doc:
         raise HTTPException(status_code=404, detail="Car not found")
+    return doc_to_car(doc)
+
+# Create car (enforces unique numeric id)
+@app.post("/api/cars", response_model=Car)
+async def create_car(car: Car):
+    existing = await db.cars.find_one({"id": car.id})
+    if existing:
+        raise HTTPException(status_code=409, detail="Car with that id already exists")
+    await db.cars.insert_one(car.dict())
     return car
 
-@app.post("/api/search", response_model=List[Car])
-async def search_cars(search: CarSearch):
-    filtered_cars = cars_data.copy()
-    
-    if search.make:
-        filtered_cars = [car for car in filtered_cars if car.make.lower() == search.make.lower()]
-    
-    if search.model:
-        filtered_cars = [car for car in filtered_cars if car.model.lower() == search.model.lower()]
-    
-    if search.min_price:
-        filtered_cars = [car for car in filtered_cars if car.price >= search.min_price]
-    
-    if search.max_price:
-        filtered_cars = [car for car in filtered_cars if car.price <= search.max_price]
-    
-    if search.min_year:
-        filtered_cars = [car for car in filtered_cars if car.year >= search.min_year]
-    
-    if search.max_year:
-        filtered_cars = [car for car in filtered_cars if car.year <= search.max_year]
-    
-    if search.fuel_type:
-        filtered_cars = [car for car in filtered_cars if car.fuel_type.lower() == search.fuel_type.lower()]
-    
-    if search.transmission:
-        filtered_cars = [car for car in filtered_cars if car.transmission.lower() == search.transmission.lower()]
-    
-    return filtered_cars
+# Update car by numeric id
+@app.put("/api/cars/{car_id}", response_model=Car)
+async def update_car(car_id: int, car: Car):
+    res = await db.cars.find_one_and_update(
+        {"id": car_id},
+        {"$set": car.dict()},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not res:
+        raise HTTPException(status_code=404, detail="Car not found")
+    return doc_to_car(res)
 
+# Delete car by numeric id
+@app.delete("/api/cars/{car_id}")
+async def delete_car(car_id: int):
+    res = await db.cars.delete_one({"id": car_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Car not found")
+    return {"message": "Car deleted"}
+
+# Search cars
+@app.post("/api/cars/search", response_model=List[Car])
+async def search_cars(search: CarSearch):
+    q: dict = {}
+
+    if search.make:
+        q["make"] = search.make
+    if search.model:
+        q["model"] = search.model
+    if search.fuel_type:
+        q["fuel_type"] = search.fuel_type
+    if search.transmission:
+        q["transmission"] = search.transmission
+
+    if search.min_price is not None or search.max_price is not None:
+        q["price"] = {}
+        if search.min_price is not None:
+            q["price"]["$gte"] = search.min_price
+        if search.max_price is not None:
+            q["price"]["$lte"] = search.max_price
+        if not q["price"]:
+            q.pop("price")
+
+    if search.min_year is not None or search.max_year is not None:
+        q["year"] = {}
+        if search.min_year is not None:
+            q["year"]["$gte"] = search.min_year
+        if search.max_year is not None:
+            q["year"]["$lte"] = search.max_year
+        if not q["year"]:
+            q.pop("year")
+
+    cursor = db.cars.find(q)
+    return [doc_to_car(d) async for d in cursor]
+
+# Featured cars
 @app.get("/api/featured", response_model=List[Car])
 async def get_featured_cars():
-    """Get featured cars (first 3 cars)"""
-    return cars_data[:3]
+    cursor = db.cars.find({}).sort("year", -1).limit(3)
+    return [doc_to_car(d) async for d in cursor]
 
+# Makes & models
 @app.get("/api/makes")
 async def get_car_makes():
-    """Get all unique car makes"""
-    makes = list(set(car.make for car in cars_data))
+    makes = await db.cars.distinct("make")
     return {"makes": sorted(makes)}
 
 @app.get("/api/models/{make}")
 async def get_car_models(make: str):
-    """Get all models for a specific make"""
-    models = list(set(car.model for car in cars_data if car.make.lower() == make.lower()))
+    models = await db.cars.distinct("model", {"make": make})
     return {"models": sorted(models)}
 
+# Serve index.html at root
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    with open("frontend/index.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.on_event("startup")
+async def _startup():
+    await init_db()
+
+
+# ---------------- Main ----------------
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000,reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

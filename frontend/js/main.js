@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = `${window.location.origin}/api`;
 
 // DOM Elements
 const navLinks = document.querySelectorAll('.nav-link');
@@ -161,6 +161,14 @@ async function loadCarModels(make) {
     }
 }
 
+function normalizeImgUrl(u) {
+    if (!u) return null;
+    if (/^https?:\/\//i.test(u)) return u;                  // already absolute
+    if (u.startsWith("/")) return `${window.location.origin}${u}`; // e.g. /static/images/...
+    return `${window.location.origin}/static/images/${u}`;   // just a filename
+  }
+  
+
 // Render Functions
 function renderCars(cars, container) {
     if (!cars || cars.length === 0) {
@@ -171,7 +179,7 @@ function renderCars(cars, container) {
     container.innerHTML = cars.map(car => `
         <div class="car-card" onclick="openCarDetail(${car.id})">
             <div class="car-image">
-                <img src="http://localhost:8000${car.image_url}" alt="${car.make} ${car.model}" onerror="this.style.display='none'">
+                <img src="${normalizeImgUrl(car.image_url)}" alt="${car.make} ${car.model}">    
             </div>
             <div class="car-info">
                 <h3 class="car-title">${car.make} ${car.model}</h3>
@@ -208,7 +216,7 @@ function renderSearchResults(cars) {
             ${cars.map(car => `
                 <div class="car-card" onclick="openCarDetail(${car.id})">
                     <div class="car-image">
-                        <img src="http://localhost:8000${car.image_url}" alt="${car.make} ${car.model}" onerror="this.style.display='none'">
+                        <img src="${normalizeImgUrl(car.image_url)}" alt="${car.make} ${car.model}">
                     </div>
                     <div class="car-info">
                         <h3 class="car-title">${car.make} ${car.model}</h3>
@@ -259,7 +267,7 @@ async function performSearch() {
         }
     });
 
-    const results = await postData(`${API_BASE_URL}/search`, searchData);
+    const results = await postData(`${API_BASE_URL}/cars/search`, searchData);
     if (results) {
         renderSearchResults(results);
         // Scroll to search results
@@ -306,7 +314,7 @@ function renderCarDetail(car) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;">
                 <div>
                     <div style="width: 100%; height: 300px; background: linear-gradient(45deg, #f0f0f0, #e0e0e0); border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                        <img src="http://localhost:8000${car.image_url}" alt="${car.make} ${car.model}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 15px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'font-size: 1.5rem; color: #ccc; text-align: center; padding: 20px;\\'>No Image Available</div>'">
+                        <img src="${normalizeImgUrl(car.image_url)}" alt="${car.make} ${car.model}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 15px;">
                     </div>
                 </div>
                 <div>
