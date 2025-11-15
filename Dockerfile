@@ -1,19 +1,14 @@
 # Use official Python image
 FROM python:3.11-slim
 
-# Set the working directory in the container
-WORKDIR /app
+RUN mkdir ~/application
 
-# Copy dependency file first
-COPY requirements.txt .
+COPY . ~/application
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR ~/application
 
-# Copy all project files into the container
-COPY . .
+RUN pip install -r requirements.txt
 
-# Expose the port your app uses (adjust if needed)
 EXPOSE 8000
 
 # Command to run your Python app

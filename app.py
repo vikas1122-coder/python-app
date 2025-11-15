@@ -7,22 +7,15 @@ from typing import List, Optional
 from pymongo import ReturnDocument
 import uvicorn
 from dotenv import load_dotenv
-load_dotenv()  # picks up .env in the project root
+import os
 
+app = FastAPI()
 
-
-from database import db, init_db
-
-# ---------------- App ----------------
-app = FastAPI(title="CarDealer Pro API", description="Premium Car Dealership Backend API")
-
-@app.on_event("startup")
-async def _startup():
-    await init_db()
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+print("Current working directory: ", os.getcwd())
+if load_dotenv():  # picks up .env in the project root
+    print("✅ Loaded .env file")
+else:
+    print("❌ .env file not found")
 
 # Static assets (images, css, js under /static)
 app.mount("/static", StaticFiles(directory="static"), name="static")
