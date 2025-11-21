@@ -8,8 +8,13 @@ from pymongo import ReturnDocument
 import uvicorn
 from dotenv import load_dotenv
 import os
+# from motor.motor_asyncio import AsyncIOMotorClient
+
+from database import db, init_db
+
 
 app = FastAPI()
+
 
 print("Current working directory: ", os.getcwd())
 if load_dotenv():  # picks up .env in the project root
@@ -176,6 +181,7 @@ def serve_frontend():
 @app.on_event("startup")
 async def _startup():
     await init_db()
+    print("db initilized")
 
 
 # ---------------- Main ----------------

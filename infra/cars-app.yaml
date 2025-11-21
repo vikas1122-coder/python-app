@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: collection-of-cars
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: collection-of-cars
+  name: cars-api-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cars-api
+  template:
+    metadata:
+      labels:
+        app: cars-api
+    spec:
+      containers:
+      - name: cars-api
+        image: 194893387965.dkr.ecr.us-east-1.amazonaws.com/myapp:latest   # 👉 Replace with your ECR repo
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000 
+        envFrom:
+        - secretRef:
+            name: cars-app-env  # 👉 FastAPI default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: collection-of-cars
+  name: cars-api-service
+spec:
+  type: ClusterIP
+  selector:
+    app: cars-api
+  ports:
+    - port: 80                   # ALB hits this port
+      targetPort: 8000           # Your container port
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: collection-of-cars
+  name: cars-api-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cars-api-service
+            port:
+              number: 80
+

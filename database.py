@@ -24,8 +24,11 @@ db = client[DB]
 
 async def init_db():
     # Test authentication
-    await db.command("ping")
-    print("✅ Connected to MongoDB Atlas")
+    try:
+        await db.command("ping")
+        print("✅ Connected to MongoDB Atlas")
+    except Exception as e:
+        print(f"❌ Could not connect to MongoDB: {e}")
 
     # Ensure numeric ID uniqueness
     await db.cars.create_index("id", unique=True)
